@@ -4,6 +4,7 @@ import datetime
 import numpy as np
 
 
+profile = {0: 0, 1: 6288}
 
 # print('Being files import...')
 #import intake csv file
@@ -50,16 +51,22 @@ else:
 		min_intake_date_value = df_intake[df_intake['intake_date']==min_intake_date]['intake_balance'].min()
 		min_output_date = df_output[(df_output['output_balance'] > 0) & (df_output['output_date'] >= min_intake_date)]['output_date'].min()
 		min_output_date_value = df_output[df_output['output_date']==min_output_date]['output_balance'].min()
+		print('intake_date: ', min_intake_date, type(min_intake_date) , pd.to_datetime(min_intake_date))
+		print('output_date: ', min_output_date, type(min_output_date) , pd.to_datetime(min_output_date))
+		sc_day = np.busday_count(min_intake_date.date(), min_output_date.date())
+		print(sc_day)
 		if np.isnan(min_intake_date_value):
 			print('\nModel Message: All of the intake was plotted!!\n')
 			break
 		elif np.isnan(min_output_date_value):
 			print('\nModel Message: Planned output numbers are less than planned intake, please plan for more output and try again!!\n')
 			break
+		
 		new_output_value = min(min_intake_date_value, min_output_date_value)
 		df_intake.loc[df_intake['intake_date']==min_intake_date, 'intake_balance'] = min_intake_date_value - new_output_value
 		df_output.loc[df_output['output_date']==min_output_date, 'output_balance'] = min_output_date_value - new_output_value
 		prod_plan = prod_plan.append({'intake_date': min_intake_date, 'output_date': min_output_date, 'stone_count': new_output_value}, ignore_index=True)
+
 
 	df_intake['intake_plotted'] = df_intake['intake_count'] - df_intake['intake_balance']
 	df_output['output_plotted'] = df_output['output_count'] - df_output['output_balance']
